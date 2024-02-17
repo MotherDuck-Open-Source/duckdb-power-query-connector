@@ -13,110 +13,35 @@ Config_UseCastInsteadOfConvert = null;
 Config_EnableDirectQuery = true;
 
 [DataSource.Kind="MotherDuckODBC", Publish="MotherDuckODBC.Publish"]
-shared MotherDuckODBC.Contents = (optional message as text) =>
+shared MotherDuckODBC.Contents = (optional database as text, optional motherduck_token as text, optional options as record) =>
     let
-        //
-        // Connection string settings
-        //
+        Config_DriverName = "DuckDB Driver",
         ConnectionString = [
-            // At minimum you need to specify the ODBC Driver to use.
             Driver = Config_DriverName,
-            // Specify custom properties for your ODBC Driver here.
-            // The fields below are appropriate for the SQL Server ODBC Driver. The
-            // names might be different for your data source.
-            Database = ":memory"
+            Database = GetFullPath(database, motherduck_token)
         ],
-
-        defaultConfig = Diagnostics.LogValue("BuildOdbcConfig", BuildOdbcConfig()),
-        SqlCapabilities = Diagnostics.LogValue(
-            "SqlCapabilities_Options", defaultConfig[SqlCapabilities] & [
-                // Place custom overrides here
-                // The values below are required for the SQL Native Client ODBC driver, but might
-                // not be required for your data source.
-                FractionalSecondsScale = 3
-            ]
-        ),
-        // Please refer to the ODBC specification for SQLGetInfo properties and values.
-        // https://github.com/Microsoft/ODBC-Specification/blob/master/Windows/inc/sqlext.h
-        SQLGetInfo = Diagnostics.LogValue(
-            "SQLGetInfo_Options",
-            defaultConfig[SQLGetInfo]
-                & [
-                    // Place custom overrides here
-                    // The values below are required for the SQL Native Client ODBC driver, but might
-                    // not be required for your data source.
-                    SQL_SQL92_PREDICATES = ODBC[SQL_SP][All],
-                    SQL_AGGREGATE_FUNCTIONS = ODBC[SQL_AF][All]
-                ]
-        ),
-        // SQLGetTypeInfo can be specified in two ways:
-        // 1. A #table() value that returns the same type information as an ODBC
-        //    call to SQLGetTypeInfo.
-        // 2. A function that accepts a table argument, and returns a table. The
-        //    argument will contain the original results of the ODBC call to SQLGetTypeInfo.
-        //    Your function implementation can modify/add to this table.
-        //
-        // For details of the format of the types table parameter and expected return value,
-        // please see: https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgettypeinfo-function
-        //
-        // The sample implementation provided here will simply output the original table
-        // to the user trace log, without any modification.
-        SQLGetTypeInfo = (types) =>
-            if (EnableTraceOutput <> true) then
-                types
-            else
-                let
-                    // Outputting the entire table might be too large, and result in the value being truncated.
-                    // We can output a row at a time instead with Table.TransformRows()
-                    rows = Table.TransformRows(types, each Diagnostics.LogValue("SQLGetTypeInfo " & _[TYPE_NAME], _)),
-                    toTable = Table.FromRecords(rows)
-                in
-                    Value.ReplaceType(toTable, Value.Type(types)),
-        // SQLColumns is a function handler that receives the results of an ODBC call
-        // to SQLColumns(). The source parameter contains a table with the data type
-        // information. This override is typically used to fix up data type mismatches
-        // between calls to SQLGetTypeInfo and SQLColumns.
-        //
-        // For details of the format of the source table parameter, please see:
-        // https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlcolumns-function
-        //
-        // The sample implementation provided here will simply output the original table
-        // to the user trace log, without any modification.
-        SQLColumns = (catalogName, schemaName, tableName, columnName, source) =>
-            if (EnableTraceOutput <> true) then
-                source
-            else
-            // the if statement conditions will force the values to evaluated/written to diagnostics
-            if (
-                Diagnostics.LogValue("SQLColumns.TableName", tableName) <> "***"
-                and Diagnostics.LogValue("SQLColumns.ColumnName", columnName) <> "***"
-            ) then
-                let
-                    // Outputting the entire table might be too large, and result in the value being truncated.
-                    // We can output a row at a time instead with Table.TransformRows()
-                    rows = Table.TransformRows(source, each Diagnostics.LogValue("SQLColumns", _)),
-                    toTable = Table.FromRecords(rows)
-                in
-                    Value.ReplaceType(toTable, Value.Type(source))
-            else
-                source,
-        // Remove null fields from the ConnectionString
-        ConnectionStringNoNulls = Record.SelectFields(
-            ConnectionString, Table.SelectRows(Record.ToTable(ConnectionString), each [Value] <> null)[Name]
-        ),
-
-        _message = if (message <> null) then message else "(no message)",
-        a = "Hello from MotherDuckODBC: " & _message
+        OdbcDatasource = Odbc.DataSource(ConnectionString)
     in
-        a;
+        OdbcDatasource;
 
 // Data Source Kind description
 MotherDuckODBC = [
+    // Set the TestConnection handler to enable gateway support.
+    // The TestConnection handler will invoke your data source function to
+    // validate the credentials the user has provider. Ideally, this is not
+    // an expensive operation to perform. By default, the dataSourcePath value
+    // will be a json string containing the required parameters of your data
+    // source function. These should be parsed and parsed as individual parameters
+    // to the specified data source function.
+    TestConnection = (dataSourcePath) =>
+        let
+            json = Json.Document(dataSourcePath), server = json[server]
+            // name of function parameter
+        in
+            {"SqlODBC.Contents", server},
+    // Set supported types of authentication
     Authentication = [
-        // Key = [],
-        // UsernamePassword = [],
-        // Windows = [],
-        Anonymous = []
+        Windows = []
     ],
     Label = Extension.LoadString("DataSourceLabel")
 ];
@@ -127,6 +52,7 @@ MotherDuckODBC.Publish = [
     Category = "Other",
     ButtonText = { Extension.LoadString("ButtonTitle"), Extension.LoadString("ButtonHelp") },
     LearnMoreUrl = "https://powerbi.microsoft.com/",
+    SupportsDirectQuery = Config_EnableDirectQuery,
     SourceImage = MotherDuckODBC.Icons,
     SourceTypeImage = MotherDuckODBC.Icons
 ];
@@ -135,6 +61,30 @@ MotherDuckODBC.Icons = [
     Icon16 = { Extension.Contents("MotherDuckODBC16.png"), Extension.Contents("MotherDuckODBC20.png"), Extension.Contents("MotherDuckODBC24.png"), Extension.Contents("MotherDuckODBC32.png") },
     Icon32 = { Extension.Contents("MotherDuckODBC32.png"), Extension.Contents("MotherDuckODBC40.png"), Extension.Contents("MotherDuckODBC48.png"), Extension.Contents("MotherDuckODBC64.png") }
 ];
+
+// Get the full DuckDB path to pass to the ODBC driver
+GetFullPath = (database as text, optional motherduck_token as text) as text =>
+    let
+        path = if IsMotherDuckDatabase(database)
+            then database & "?motherduck_token=" & motherduck_token
+            else database
+    in
+        if IsMotherDuckDatabase(database) and (motherduck_token = null or motherduck_token = "")
+        then
+            error Error.Record("Expression.Error",
+            "Cannot connect to MotherDuck database:
+            Please enter your connection token.
+            Go to http://app.motherduck.com/ and copy
+            it from your User Settings.")
+        else
+            path;
+
+// Check if the database is a MotherDuck database
+IsMotherDuckDatabase = (database as text) as logical =>
+    let
+        result = Text.StartsWith(database, "md:")
+    in
+        result;
 
 // build settings based on configuration variables
 BuildOdbcConfig = () as record =>
