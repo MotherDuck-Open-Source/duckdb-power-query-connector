@@ -2,31 +2,128 @@
 [Version = "1.0.0"]
 section MotherDuckODBC;
 
+// When set to true, additional trace information will be written out to the User log.
+// This should be set to false before release. Tracing is done through a call to
+// Diagnostics.LogValue(). When EnableTraceOutput is set to false, the call becomes a
+// no-op and simply returns the original value.
 EnableTraceOutput = true;
+
+// The name of the ODBC driver
 Config_DriverName = "DuckDB Driver";
+
+// Set to null to determine the value from the driver.
 Config_SqlConformance = null;
+
+// DuckDB only supports OFFSET when LIMIT is also specified,
+// so we will use LimitClauseKind.Limit.
 Config_LimitClauseKind = LimitClauseKind.Limit;
+
+// DuckDB does not support standard username/password
+// handling through the UID and PWD connection string parameters.
 Config_DefaultUsernamePasswordHandling = false;
+
+// If the driver supports parameter bindings, then set this to true.
 Config_UseParameterBindings = null;
+
+// Override this setting to force the character escape value.
 Config_StringLiterateEscapeCharacters = null;
+
+// Override this if the driver expects the use of CAST instead of CONVERT.
 Config_UseCastInsteadOfConvert = null;
+
+// Set this to true to enable Direct Query in addition to Import mode.
 Config_EnableDirectQuery = true;
 
 [DataSource.Kind="MotherDuckODBC", Publish="MotherDuckODBC.Publish"]
 shared MotherDuckODBC.Contents = (optional database as text, optional motherduck_token as text, optional options as record) =>
     let
-        // The name of the ODBC driver
-        Config_DriverName = "DuckDB Driver",
+        Config_DriverName = Config_DriverName,
         // The ODBC connection string
         ConnectionString = [
             Driver = Config_DriverName,
             Database = GetFullPath(database, motherduck_token),
             custom_user_agent = "Microsoft Power Query/MotherDuckODBC/v0.0"
         ],
-        // Create and return the ODBC data source
-        OdbcDatasource = Odbc.DataSource(
-            ConnectionString,
-            [
+        //
+        // Configuration options for the call to Odbc.DataSource
+        //
+        defaultConfig = Diagnostics.LogValue("BuildOdbcConfig", BuildOdbcConfig()),
+        SqlCapabilities = Diagnostics.LogValue(
+            "SqlCapabilities_Options", defaultConfig[SqlCapabilities] & [
+                SupportsTop = false,
+                SupportsDerivedTable = true,
+                Sql92Conformance = 8 /* SQL_SC_SQL92_FULL */,
+                GroupByCapabilities = 4 /* SQL_GB_NO_RELATION */,
+                FractionalSecondsScale = 3,
+                // Enable Native query
+                Sql92Translation = "PassThrough"
+            ]
+        ),
+        // Please refer to the ODBC specification for SQLGetInfo properties and values.
+        // https://github.com/Microsoft/ODBC-Specification/blob/master/Windows/inc/sqlext.h
+        SQLGetInfo = Diagnostics.LogValue(
+            "SQLGetInfo_Options",
+            defaultConfig[SQLGetInfo]
+                & [
+                    // Place custom overrides here
+                    // The values below are required for the SQL Native Client ODBC driver, but might
+                    // not be required for your data source.
+                    SQL_SQL92_PREDICATES = ODBC[SQL_SP][All],
+                    SQL_AGGREGATE_FUNCTIONS = ODBC[SQL_AF][All]
+                ]
+        ),
+        // SQLGetTypeInfo can be specified in two ways:
+        // 1. A #table() value that returns the same type information as an ODBC
+        //    call to SQLGetTypeInfo.
+        // 2. A function that accepts a table argument, and returns a table. The
+        //    argument will contain the original results of the ODBC call to SQLGetTypeInfo.
+        //    Your function implementation can modify/add to this table.
+        //
+        // For details of the format of the types table parameter and expected return value,
+        // please see: https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgettypeinfo-function
+        //
+        // The sample implementation provided here will simply output the original table
+        // to the user trace log, without any modification.
+        SQLGetTypeInfo = (types) =>
+            if (EnableTraceOutput <> true) then
+                types
+            else
+                let
+                    // Outputting the entire table might be too large, and result in the value being truncated.
+                    // We can output a row at a time instead with Table.TransformRows()
+                    rows = Table.TransformRows(types, each Diagnostics.LogValue("SQLGetTypeInfo " & _[TYPE_NAME], _)),
+                    toTable = Table.FromRecords(rows)
+                in
+                    Value.ReplaceType(toTable, Value.Type(types)),
+        // SQLColumns is a function handler that receives the results of an ODBC call
+        // to SQLColumns(). The source parameter contains a table with the data type
+        // information. This override is typically used to fix up data type mismatches
+        // between calls to SQLGetTypeInfo and SQLColumns.
+        //
+        // For details of the format of the source table parameter, please see:
+        // https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlcolumns-function
+        //
+        // The sample implementation provided here will simply output the original table
+        // to the user trace log, without any modification.
+        SQLColumns = (catalogName, schemaName, tableName, columnName, source) =>
+            if (EnableTraceOutput <> true) then
+                source
+            else
+            // the if statement conditions will force the values to evaluated/written to diagnostics
+            if (
+                Diagnostics.LogValue("SQLColumns.TableName", tableName) <> "***"
+                and Diagnostics.LogValue("SQLColumns.ColumnName", columnName) <> "***"
+            ) then
+                let
+                    // Outputting the entire table might be too large, and result in the value being truncated.
+                    // We can output a row at a time instead with Table.TransformRows()
+                    rows = Table.TransformRows(source, each Diagnostics.LogValue("SQLColumns", _)),
+                    toTable = Table.FromRecords(rows)
+                in
+                    Value.ReplaceType(toTable, Value.Type(source))
+            else
+                source,
+        Options = [
                 // A logical (true/false) that sets whether to view the tables grouped by their schema names
                 HierarchicalNavigation = false,
                 // Allows upconversion of numeric types
@@ -34,8 +131,17 @@ shared MotherDuckODBC.Contents = (optional database as text, optional motherduck
                 // Allow upconversion / resizing of numeric and string types
                 TolerateConcatOverflow = true,
                 // Enables connection pooling via the system ODBC manager
-                ClientConnectionPooling = true
-            ]
+                ClientConnectionPooling = false,
+                // Other configuration options
+                SqlCapabilities = SqlCapabilities,
+                SQLColumns = SQLColumns,
+                SQLGetInfo = SQLGetInfo,
+                SQLGetTypeInfo = SQLGetTypeInfo
+            ],
+        // Create and return the ODBC data source
+        OdbcDatasource = Odbc.DataSource(
+            ConnectionString,
+            Options
         )
     in
         OdbcDatasource;
