@@ -37,6 +37,62 @@ shared MotherDuckODBC.Contents = (optional message as text) =>
             ]
         ),
 
+        // SQLGetTypeInfo can be specified in two ways:
+        // 1. A #table() value that returns the same type information as an ODBC
+        //    call to SQLGetTypeInfo.
+        // 2. A function that accepts a table argument, and returns a table. The
+        //    argument will contain the original results of the ODBC call to SQLGetTypeInfo.
+        //    Your function implementation can modify/add to this table.
+        //
+        // For details of the format of the types table parameter and expected return value,
+        // please see: https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlgettypeinfo-function
+        //
+        // The sample implementation provided here will simply output the original table
+        // to the user trace log, without any modification.
+        SQLGetTypeInfo = (types) =>
+            if (EnableTraceOutput <> true) then
+                types
+            else
+                let
+                    // Outputting the entire table might be too large, and result in the value being truncated.
+                    // We can output a row at a time instead with Table.TransformRows()
+                    rows = Table.TransformRows(types, each Diagnostics.LogValue("SQLGetTypeInfo " & _[TYPE_NAME], _)),
+                    toTable = Table.FromRecords(rows)
+                in
+                    Value.ReplaceType(toTable, Value.Type(types)),
+        // SQLColumns is a function handler that receives the results of an ODBC call
+        // to SQLColumns(). The source parameter contains a table with the data type
+        // information. This override is typically used to fix up data type mismatches
+        // between calls to SQLGetTypeInfo and SQLColumns.
+        //
+        // For details of the format of the source table parameter, please see:
+        // https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlcolumns-function
+        //
+        // The sample implementation provided here will simply output the original table
+        // to the user trace log, without any modification.
+        SQLColumns = (catalogName, schemaName, tableName, columnName, source) =>
+            if (EnableTraceOutput <> true) then
+                source
+            else
+            // the if statement conditions will force the values to evaluated/written to diagnostics
+            if (
+                Diagnostics.LogValue("SQLColumns.TableName", tableName) <> "***"
+                and Diagnostics.LogValue("SQLColumns.ColumnName", columnName) <> "***"
+            ) then
+                let
+                    // Outputting the entire table might be too large, and result in the value being truncated.
+                    // We can output a row at a time instead with Table.TransformRows()
+                    rows = Table.TransformRows(source, each Diagnostics.LogValue("SQLColumns", _)),
+                    toTable = Table.FromRecords(rows)
+                in
+                    Value.ReplaceType(toTable, Value.Type(source))
+            else
+                source,
+        // Remove null fields from the ConnectionString
+        ConnectionStringNoNulls = Record.SelectFields(
+            ConnectionString, Table.SelectRows(Record.ToTable(ConnectionString), each [Value] <> null)[Name]
+        ),
+
         _message = if (message <> null) then message else "(no message)",
         a = "Hello from MotherDuckODBC: " & _message
     in
