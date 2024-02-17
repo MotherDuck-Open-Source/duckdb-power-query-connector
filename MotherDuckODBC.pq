@@ -18,7 +18,8 @@ shared MotherDuckODBC.Contents = (optional database as text, optional motherduck
         Config_DriverName = "DuckDB Driver",
         ConnectionString = [
             Driver = Config_DriverName,
-            Database = GetFullPath(database, motherduck_token)
+            Database = GetFullPath(database, motherduck_token),
+            custom_user_agent = "Microsoft Power Query/MotherDuckODBC/v0.0"
         ],
         OdbcDatasource = Odbc.DataSource(ConnectionString)
     in
