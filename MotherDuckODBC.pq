@@ -15,13 +15,28 @@ Config_EnableDirectQuery = true;
 [DataSource.Kind="MotherDuckODBC", Publish="MotherDuckODBC.Publish"]
 shared MotherDuckODBC.Contents = (optional database as text, optional motherduck_token as text, optional options as record) =>
     let
+        // The name of the ODBC driver
         Config_DriverName = "DuckDB Driver",
+        // The ODBC connection string
         ConnectionString = [
             Driver = Config_DriverName,
             Database = GetFullPath(database, motherduck_token),
             custom_user_agent = "Microsoft Power Query/MotherDuckODBC/v0.0"
         ],
-        OdbcDatasource = Odbc.DataSource(ConnectionString)
+        // Create and return the ODBC data source
+        OdbcDatasource = Odbc.DataSource(
+            ConnectionString,
+            [
+                // A logical (true/false) that sets whether to view the tables grouped by their schema names
+                HierarchicalNavigation = false,
+                // Allows upconversion of numeric types
+                SoftNumbers = true,
+                // Allow upconversion / resizing of numeric and string types
+                TolerateConcatOverflow = true,
+                // Enables connection pooling via the system ODBC manager
+                ClientConnectionPooling = true
+            ]
+        )
     in
         OdbcDatasource;
 
