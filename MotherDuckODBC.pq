@@ -36,7 +36,19 @@ shared MotherDuckODBC.Contents = (optional message as text) =>
                 FractionalSecondsScale = 3
             ]
         ),
-
+        // Please refer to the ODBC specification for SQLGetInfo properties and values.
+        // https://github.com/Microsoft/ODBC-Specification/blob/master/Windows/inc/sqlext.h
+        SQLGetInfo = Diagnostics.LogValue(
+            "SQLGetInfo_Options",
+            defaultConfig[SQLGetInfo]
+                & [
+                    // Place custom overrides here
+                    // The values below are required for the SQL Native Client ODBC driver, but might
+                    // not be required for your data source.
+                    SQL_SQL92_PREDICATES = ODBC[SQL_SP][All],
+                    SQL_AGGREGATE_FUNCTIONS = ODBC[SQL_AF][All]
+                ]
+        ),
         // SQLGetTypeInfo can be specified in two ways:
         // 1. A #table() value that returns the same type information as an ODBC
         //    call to SQLGetTypeInfo.
