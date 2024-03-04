@@ -42,7 +42,7 @@ shared MotherDuckODBC.Contents = (optional database as text, optional motherduck
         ConnectionString = [
             Driver = Config_DriverName,
             Database = GetFullPath(database, motherduck_token),
-            custom_user_agent = "Microsoft Power Query/MotherDuckODBC/v0.0"
+            custom_user_agent = "powerbi/v0.0(MotherDuckODBC)"
         ],
         //
         // Configuration options for the call to Odbc.DataSource
@@ -103,26 +103,63 @@ shared MotherDuckODBC.Contents = (optional database as text, optional motherduck
         // For details of the format of the source table parameter, please see:
         // https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlcolumns-function
         //
-        // The sample implementation provided here will simply output the original table
-        // to the user trace log, without any modification.
         SQLColumns = (catalogName, schemaName, tableName, columnName, source) =>
-            if (EnableTraceOutput <> true) then
-                source
-            else
-            // the if statement conditions will force the values to evaluated/written to diagnostics
-            if (
-                Diagnostics.LogValue("SQLColumns.TableName", tableName) <> "***"
-                and Diagnostics.LogValue("SQLColumns.ColumnName", columnName) <> "***"
-            ) then
-                let
-                    // Outputting the entire table might be too large, and result in the value being truncated.
-                    // We can output a row at a time instead with Table.TransformRows()
-                    rows = Table.TransformRows(source, each Diagnostics.LogValue("SQLColumns", _)),
-                    toTable = Table.FromRecords(rows)
-                in
-                    Value.ReplaceType(toTable, Value.Type(source))
-            else
-                source,
+            let
+                    // Types defined in duckdb/tools/odbc/include/api_info.hpp#L74
+                    SQL_BIT = 1,
+                    SQL_TINYINT = 3,
+                    SQL_SMALLINT = 5,
+                    SQL_INTEGER = 11,
+                    SQL_BIGINT = 20,
+                    SQL_REAL = 14,
+                    SQL_FLOAT = 24,
+                    SQL_TYPE_DATE = 10,
+                    SQL_TYPE_TIME = 9,
+                    SQL_TYPE_TIMESTAMP = 20,
+                    SQL_VARCHAR = 256,
+                    SQL_VARBINARY = 512,
+                    FixDataType = (dataType) =>
+                        // For debugging purposes, to find out what data types are passed,
+                        // uncomment next line and comment rest of code block
+                        // error Error.Record("Expression.Error", dataType),
+                        if dataType = SQL_BIT then
+                            ODBC[SQL_TYPE][BIT]
+                        else if dataType = SQL_TINYINT then
+                            ODBC[SQL_TYPE][TINYINT]
+                        else if dataType = SQL_BIGINT then
+                            ODBC[SQL_TYPE][BIGINT]
+                        else if dataType = SQL_INTEGER then
+                            ODBC[SQL_TYPE][INTEGER]
+                        else if dataType = SQL_TYPE_DATE then
+                            ODBC[SQL_TYPE][TYPE_DATE]
+                        else if dataType = SQL_TYPE_TIME then
+                            ODBC[SQL_TYPE][TYPE_TIME]
+                        else if dataType = SQL_TYPE_TIMESTAMP then
+                            ODBC[SQL_TYPE][TIMESTAMP]
+                        else if dataType = SQL_VARCHAR then
+                            ODBC[SQL_TYPE][VARCHAR]
+                        else if dataType = SQL_VARBINARY then
+                            ODBC[SQL_TYPE][VARBINARY]
+                        else
+                            dataType,
+                    Transform = Table.TransformColumns(source, {{"DATA_TYPE", FixDataType}})
+           in
+                    if (EnableTraceOutput <> true) then
+                        Transform
+                    else if (
+                        // the if statement conditions will force the values to evaluated/written to diagnostics
+                        Diagnostics.LogValue("SQLColumns.TableName", tableName) <> "***"
+                        and Diagnostics.LogValue("SQLColumns.ColumnName", columnName) <> "***"
+                    ) then
+                        let
+                            // Outputting the entire table might be too large, and result in the value being truncated.
+                            // We can output a row at a time instead with Table.TransformRows()
+                            rows = Table.TransformRows(Transform, each Diagnostics.LogValue("SQLColumns", _)),
+                            toTable = Table.FromRecords(rows)
+                        in
+                            Value.ReplaceType(toTable, Value.Type(Transform))
+                    else
+                        Transform,
         Options = [
                 // A logical (true/false) that sets whether to view the tables grouped by their schema names
                 HierarchicalNavigation = false,
