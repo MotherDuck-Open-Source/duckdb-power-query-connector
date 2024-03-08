@@ -7,15 +7,15 @@
     <MezOutputPath>$(OutputPath)$(MsBuildProjectName).mez</MezOutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <MezContent Include="MotherDuckODBC.pq" />
-    <MezContent Include="MotherDuckODBC16.png" />
-    <MezContent Include="MotherDuckODBC20.png" />
-    <MezContent Include="MotherDuckODBC24.png" />
-    <MezContent Include="MotherDuckODBC32.png" />
-    <MezContent Include="MotherDuckODBC40.png" />
-    <MezContent Include="MotherDuckODBC48.png" />
-    <MezContent Include="MotherDuckODBC64.png" />
-    <MezContent Include="MotherDuckODBC80.png" />
+    <MezContent Include="DuckDB.pq" />
+    <MezContent Include="duckdb-logo-16.png" />
+    <MezContent Include="duckdb-logo-20.png" />
+    <MezContent Include="duckdb-logo-24.png" />
+    <MezContent Include="duckdb-logo-32.png" />
+    <MezContent Include="duckdb-logo-40.png" />
+    <MezContent Include="duckdb-logo-48.png" />
+    <MezContent Include="duckdb-logo-64.png" />
+    <MezContent Include="duckdb-logo-80.png" />
     <MezContent Include="resources.resx" />
   </ItemGroup>
   <Target Name="BuildMez" AfterTargets="Build" Inputs="@(MezContent)" Outputs="$(MezOutputPath)">

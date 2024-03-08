@@ -1,6 +1,6 @@
 // This file contains your Data Connector logic
-[Version = "1.0.0"]
-section MotherDuckODBC;
+[Version = "0.1.0"]
+section DuckDB;
 
 // When set to true, additional trace information will be written out to the User log.
 // This should be set to false before release. Tracing is done through a call to
@@ -34,15 +34,15 @@ Config_UseCastInsteadOfConvert = null;
 // Set this to true to enable Direct Query in addition to Import mode.
 Config_EnableDirectQuery = true;
 
-[DataSource.Kind="MotherDuckODBC", Publish="MotherDuckODBC.Publish"]
-shared MotherDuckODBC.Contents = (optional database as text, optional motherduck_token as text, optional options as record) =>
+[DataSource.Kind="DuckDB", Publish="DuckDB.Publish"]
+shared DuckDB.Contents = (database as text, optional motherduck_token as text, optional options as record) =>
     let
         Config_DriverName = Config_DriverName,
         // The ODBC connection string
         ConnectionString = [
             Driver = Config_DriverName,
             Database = GetFullPath(database, motherduck_token),
-            custom_user_agent = "powerbi/v0.0(MotherDuckODBC)"
+            custom_user_agent = "powerbi/v0.0(DuckDB)"
         ],
         //
         // Configuration options for the call to Odbc.DataSource
@@ -105,61 +105,63 @@ shared MotherDuckODBC.Contents = (optional database as text, optional motherduck
         //
         SQLColumns = (catalogName, schemaName, tableName, columnName, source) =>
             let
-                    // Types defined in duckdb/tools/odbc/include/api_info.hpp#L74
-                    SQL_BIT = 1,
-                    SQL_TINYINT = 3,
-                    SQL_SMALLINT = 5,
-                    SQL_INTEGER = 11,
-                    SQL_BIGINT = 20,
-                    SQL_REAL = 14,
-                    SQL_FLOAT = 24,
-                    SQL_TYPE_DATE = 10,
-                    SQL_TYPE_TIME = 9,
-                    SQL_TYPE_TIMESTAMP = 20,
-                    SQL_VARCHAR = 256,
-                    SQL_VARBINARY = 512,
-                    FixDataType = (dataType) =>
-                        // For debugging purposes, to find out what data types are passed,
-                        // uncomment next line and comment rest of code block
-                        // error Error.Record("Expression.Error", dataType),
-                        if dataType = SQL_BIT then
-                            ODBC[SQL_TYPE][BIT]
-                        else if dataType = SQL_TINYINT then
-                            ODBC[SQL_TYPE][TINYINT]
-                        else if dataType = SQL_BIGINT then
-                            ODBC[SQL_TYPE][BIGINT]
-                        else if dataType = SQL_INTEGER then
-                            ODBC[SQL_TYPE][INTEGER]
-                        else if dataType = SQL_TYPE_DATE then
-                            ODBC[SQL_TYPE][TYPE_DATE]
-                        else if dataType = SQL_TYPE_TIME then
-                            ODBC[SQL_TYPE][TYPE_TIME]
-                        else if dataType = SQL_TYPE_TIMESTAMP then
-                            ODBC[SQL_TYPE][TIMESTAMP]
-                        else if dataType = SQL_VARCHAR then
-                            ODBC[SQL_TYPE][VARCHAR]
-                        else if dataType = SQL_VARBINARY then
-                            ODBC[SQL_TYPE][VARBINARY]
-                        else
-                            dataType,
-                    Transform = Table.TransformColumns(source, {{"DATA_TYPE", FixDataType}})
-           in
-                    if (EnableTraceOutput <> true) then
-                        Transform
-                    else if (
-                        // the if statement conditions will force the values to evaluated/written to diagnostics
-                        Diagnostics.LogValue("SQLColumns.TableName", tableName) <> "***"
-                        and Diagnostics.LogValue("SQLColumns.ColumnName", columnName) <> "***"
-                    ) then
-                        let
-                            // Outputting the entire table might be too large, and result in the value being truncated.
-                            // We can output a row at a time instead with Table.TransformRows()
-                            rows = Table.TransformRows(Transform, each Diagnostics.LogValue("SQLColumns", _)),
-                            toTable = Table.FromRecords(rows)
-                        in
-                            Value.ReplaceType(toTable, Value.Type(Transform))
+                // Types defined in duckdb/tools/odbc/include/api_info.hpp#L74
+                SQL_BIT = 10, // bool
+                SQL_TINYINT = 11, // int8
+                SQL_SMALLINT = 5,
+                SQL_INTEGER = 13, // int32
+                SQL_BIGINT = 20,
+                SQL_REAL = 14,
+                SQL_FLOAT = 22, // float
+                SQL_TYPE_DATE = 10,
+                SQL_TYPE_TIME = 9,
+                SQL_TYPE_TIMESTAMP = 19, // timestamp
+                SQL_VARCHAR = 25,
+                SQL_VARBINARY = 512,
+                FixDataType = (dataType) =>
+                    // For debugging purposes, to find out what data types are passed,
+                    // uncomment next line and comment rest of code block
+                    // error Error.Record("Expression.Error", Number.ToText(dataType)),
+                    if dataType = SQL_BIT then
+                        ODBC[SQL_TYPE][VARCHAR]
+                    else if dataType = SQL_TINYINT then
+                        ODBC[SQL_TYPE][TINYINT]
+                    else if dataType = SQL_BIGINT then
+                        ODBC[SQL_TYPE][BIGINT]
+                    else if dataType = SQL_INTEGER then
+                        ODBC[SQL_TYPE][BIGINT]
+                    else if dataType = SQL_FLOAT then
+                        ODBC[SQL_TYPE][FLOAT]
+                    else if dataType = SQL_TYPE_DATE then
+                        ODBC[SQL_TYPE][TYPE_DATE]
+                    else if dataType = SQL_TYPE_TIME then
+                        ODBC[SQL_TYPE][TYPE_TIME]
+                    else if dataType = SQL_TYPE_TIMESTAMP then
+                        ODBC[SQL_TYPE][TIMESTAMP]
+                    else if dataType = SQL_VARCHAR then
+                        ODBC[SQL_TYPE][VARCHAR]
+                    else if dataType = SQL_VARBINARY then
+                        ODBC[SQL_TYPE][VARBINARY]
                     else
-                        Transform,
+                        dataType,
+                Transform = Table.TransformColumns(source, {{"DATA_TYPE", FixDataType}})
+           in
+                if (EnableTraceOutput <> true) then
+                    Transform
+                else if (
+                    // the if statement conditions will force the values to evaluated/written to diagnostics
+                    Diagnostics.LogValue("SQLColumns.TableName", tableName) <> "***"
+                    and Diagnostics.LogValue("SQLColumns.ColumnName", columnName) <> "***"
+                ) then
+                    let
+                        // Outputting the entire table might be too large, and result in the value being truncated.
+                        // We can output a row at a time instead with Table.TransformRows()
+                        rows = Table.TransformRows(Transform, each Diagnostics.LogValue("SQLColumns", _)),
+                        toTable = Table.FromRecords(rows)
+                    in
+                        Value.ReplaceType(toTable, Value.Type(Transform))
+                else
+                    Transform,
         Options = [
                 // A logical (true/false) that sets whether to view the tables grouped by their schema names
                 HierarchicalNavigation = false,
@@ -184,7 +186,7 @@ shared MotherDuckODBC.Contents = (optional database as text, optional motherduck
         OdbcDatasource;
 
 // Data Source Kind description
-MotherDuckODBC = [
+DuckDB = [
     // Set the TestConnection handler to enable gateway support.
     // The TestConnection handler will invoke your data source function to
     // validate the credentials the user has provider. Ideally, this is not
@@ -206,19 +208,19 @@ MotherDuckODBC = [
 ];
 
 // Data Source UI publishing description
-MotherDuckODBC.Publish = [
+DuckDB.Publish = [
     Beta = true,
     Category = "Other",
     ButtonText = { Extension.LoadString("ButtonTitle"), Extension.LoadString("ButtonHelp") },
     LearnMoreUrl = "https://powerbi.microsoft.com/",
     SupportsDirectQuery = Config_EnableDirectQuery,
-    SourceImage = MotherDuckODBC.Icons,
-    SourceTypeImage = MotherDuckODBC.Icons
+    SourceImage = DuckDB.Icons,
+    SourceTypeImage = DuckDB.Icons
 ];
 
-MotherDuckODBC.Icons = [
-    Icon16 = { Extension.Contents("MotherDuckODBC16.png"), Extension.Contents("MotherDuckODBC20.png"), Extension.Contents("MotherDuckODBC24.png"), Extension.Contents("MotherDuckODBC32.png") },
-    Icon32 = { Extension.Contents("MotherDuckODBC32.png"), Extension.Contents("MotherDuckODBC40.png"), Extension.Contents("MotherDuckODBC48.png"), Extension.Contents("MotherDuckODBC64.png") }
+DuckDB.Icons = [
+    Icon16 = { Extension.Contents("duckdb-logo-16.png"), Extension.Contents("duckdb-logo-20.png"), Extension.Contents("duckdb-logo-24.png"), Extension.Contents("duckdb-logo-32.png") },
+    Icon32 = { Extension.Contents("duckdb-logo-32.png"), Extension.Contents("duckdb-logo-40.png"), Extension.Contents("duckdb-logo-48.png"), Extension.Contents("duckdb-logo-64.png") }
 ];
 
 // Get the full DuckDB path to pass to the ODBC driver
