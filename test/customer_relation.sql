@@ -1,4 +1,4 @@
-create table customer_relation AS (
+create or replace table test AS (
     select
         uuid()::VARCHAR as customer_id,
         uuid()::VARCHAR as customer_varchar_field,
@@ -7,4 +7,4 @@ create table customer_relation AS (
         (random()*10)::integer as customer_integer_field,
         CAST(1e12 * random() AS FLOAT) as customer_float_field
     from generate_series(1, 10) g(x)
-)
+);
