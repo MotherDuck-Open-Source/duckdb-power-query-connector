@@ -1,6 +1,6 @@
 // Use this file to write queries to test your data connector
 let
-    Database = "C:\Users\Guen Prawiroatmodjo\source\PowerBITests\test2.db",
+    Database = "~\source\repos\DuckDBPowerQueryConnector\test\test.db",
     OdbcDatasource = DuckDB.Contents(Database)
     // Database = "md:my_db",
     // MotherDuckToken = "",
