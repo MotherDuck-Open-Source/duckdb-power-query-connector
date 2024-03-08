@@ -18,7 +18,7 @@ This is the Power Query Custom Connector for DuckDB. Use this to connect to a Du
 1. Click on Get Data -> More...
 1. Search for `DuckDB` and click "Connect"
 ![Find DuckDB connector](images/find-connector.png)
-1. Enter your database location. This can be `memory`, a local file path or a MotherDuck database location, e.g. `md:my_database`. (Optional) enter your [MotherDuck token](https://motherduck.com/docs/authenticating-to-motherduck/#authentication-using-a-service-token).
+1. Enter your database location. This can be a local file path (e.g. `~\my_database.db`) or a MotherDuck database location (e.g. `md:my_database`). (Optional) enter your [MotherDuck token](https://motherduck.com/docs/authenticating-to-motherduck/#authentication-using-a-service-token).
 ![Connect to your DuckDB database](images/connect-duckdb.png). Click "OK".
 1. Click "Connect".
 ![Connect dialog](images/connect.png)
