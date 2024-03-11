@@ -15,6 +15,11 @@ create or replace table test AS (
         '2024-03-14'::DATE as customer_date_field,
         (x * 3.141592653589793238462643)::DECIMAL(27, 24) as customer_decimal_field,
         (x * 10e10)::HUGEINT as customer_hugeint_field,
-        -- x * (INTERVAL 5 HOUR) as customer_interval_field
+        (x - 1)::REAL as customer_real_field,
+        (x * 3000)::SMALLINT as customer_small_int_field,
+        -- DOES NOT WORK x * (INTERVAL 5 HOUR) as customer_interval_field,
+        -- DOES NOT WORK TIME '01:02:03' as customer_time_field,
+        -- DOES NOT WORK '2024-03-14 15:14:15 Europe/Amsterdam'::TIMESTAMPTZ as customer_timestamptz_field,
+
     from generate_series(1, 10) g(x)
 );

@@ -108,9 +108,11 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                 // Types defined in duckdb/tools/odbc/include/api_info.hpp#L74
                 DUCKDB_BOOL = 10, // bool
                 DUCKDB_TINYINT = 11, // int8
+                DUCKDB_SMALLINT = 12, // int16
                 DUCKDB_INTEGER = 13, // int32
                 DUCKDB_BIGINT = 14, // bigint
                 DUCKDB_DATE = 15, // date
+                DUCKDB_TIME = 16, // time
                 DUCKDB_TIMESTAMP = 19, // timestamp
                 DUCKDB_DECIMAL = 21, // decimal
                 DUCKDB_FLOAT = 22, // float
@@ -118,6 +120,7 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                 DUCKDB_VARCHAR = 25, // varchar
                 DUCKDB_BLOB = 26, // blob
                 DUCKDB_INTERVAL = 27, // interval
+                DUCKDB_TIMESTAMPTZ = 32, // timestamptz
                 DUCKDB_BIT = 36, // bit
                 DUCKDB_HUGEINT = 50, // hugeint
                 FixDataType = (dataType) =>
@@ -128,6 +131,8 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                         ODBC[SQL_TYPE][VARCHAR]
                     else if dataType = DUCKDB_TINYINT then
                         ODBC[SQL_TYPE][TINYINT]
+                    else if dataType = DUCKDB_SMALLINT then
+                        ODBC[SQL_TYPE][SMALLINT]
                     else if dataType = DUCKDB_BIGINT then
                         ODBC[SQL_TYPE][BIGINT]
                     else if dataType = DUCKDB_INTEGER then
@@ -140,6 +145,8 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                         ODBC[SQL_TYPE][DOUBLE]
                     else if dataType = DUCKDB_DATE then
                         ODBC[SQL_TYPE][TYPE_DATE]
+                    else if dataType = DUCKDB_TIME then
+                        ODBC[SQL_TYPE][TIME]
                     else if dataType = DUCKDB_TIMESTAMP then
                         ODBC[SQL_TYPE][TIMESTAMP]
                     else if dataType = DUCKDB_VARCHAR then
@@ -148,6 +155,8 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                         ODBC[SQL_TYPE][BINARY]
                     else if dataType = DUCKDB_INTERVAL then
                         ODBC[SQL_TYPE][INTERVAL]
+                    else if dataType = DUCKDB_TIMESTAMPTZ then
+                        ODBC[SQL_TYPE][TIMESTAMP]
                     else if dataType = DUCKDB_BIT then
                         ODBC[SQL_TYPE][VARCHAR]
                     else if dataType = DUCKDB_HUGEINT then
