@@ -106,42 +106,52 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
         SQLColumns = (catalogName, schemaName, tableName, columnName, source) =>
             let
                 // Types defined in duckdb/tools/odbc/include/api_info.hpp#L74
-                SQL_BIT = 10, // bool
-                SQL_TINYINT = 11, // int8
-                SQL_SMALLINT = 5,
-                SQL_INTEGER = 13, // int32
-                SQL_BIGINT = 20,
-                SQL_REAL = 14,
-                SQL_FLOAT = 22, // float
-                SQL_TYPE_DATE = 10,
-                SQL_TYPE_TIME = 9,
-                SQL_TYPE_TIMESTAMP = 19, // timestamp
-                SQL_VARCHAR = 25,
-                SQL_VARBINARY = 512,
+                DUCKDB_BOOL = 10, // bool
+                DUCKDB_TINYINT = 11, // int8
+                DUCKDB_INTEGER = 13, // int32
+                DUCKDB_BIGINT = 14, // bigint
+                DUCKDB_DATE = 15, // date
+                DUCKDB_TIMESTAMP = 19, // timestamp
+                DUCKDB_DECIMAL = 21, // decimal
+                DUCKDB_FLOAT = 22, // float
+                DUCKDB_DOUBLE = 23, //double
+                DUCKDB_VARCHAR = 25, // varchar
+                DUCKDB_BLOB = 26, // blob
+                DUCKDB_INTERVAL = 27, // interval
+                DUCKDB_BIT = 36, // bit
+                DUCKDB_HUGEINT = 50, // hugeint
                 FixDataType = (dataType) =>
                     // For debugging purposes, to find out what data types are passed,
                     // uncomment next line and comment rest of code block
                     // error Error.Record("Expression.Error", Number.ToText(dataType)),
-                    if dataType = SQL_BIT then
+                    if dataType = DUCKDB_BOOL then
                         ODBC[SQL_TYPE][VARCHAR]
-                    else if dataType = SQL_TINYINT then
+                    else if dataType = DUCKDB_TINYINT then
                         ODBC[SQL_TYPE][TINYINT]
-                    else if dataType = SQL_BIGINT then
+                    else if dataType = DUCKDB_BIGINT then
                         ODBC[SQL_TYPE][BIGINT]
-                    else if dataType = SQL_INTEGER then
+                    else if dataType = DUCKDB_INTEGER then
                         ODBC[SQL_TYPE][BIGINT]
-                    else if dataType = SQL_FLOAT then
+                    else if dataType = DUCKDB_DECIMAL then
+                        ODBC[SQL_TYPE][DECIMAL]
+                    else if dataType = DUCKDB_FLOAT then
                         ODBC[SQL_TYPE][FLOAT]
-                    else if dataType = SQL_TYPE_DATE then
+                    else if dataType = DUCKDB_DOUBLE then
+                        ODBC[SQL_TYPE][DOUBLE]
+                    else if dataType = DUCKDB_DATE then
                         ODBC[SQL_TYPE][TYPE_DATE]
-                    else if dataType = SQL_TYPE_TIME then
-                        ODBC[SQL_TYPE][TYPE_TIME]
-                    else if dataType = SQL_TYPE_TIMESTAMP then
+                    else if dataType = DUCKDB_TIMESTAMP then
                         ODBC[SQL_TYPE][TIMESTAMP]
-                    else if dataType = SQL_VARCHAR then
+                    else if dataType = DUCKDB_VARCHAR then
                         ODBC[SQL_TYPE][VARCHAR]
-                    else if dataType = SQL_VARBINARY then
-                        ODBC[SQL_TYPE][VARBINARY]
+                    else if dataType = DUCKDB_BLOB then
+                        ODBC[SQL_TYPE][BINARY]
+                    else if dataType = DUCKDB_INTERVAL then
+                        ODBC[SQL_TYPE][INTERVAL]
+                    else if dataType = DUCKDB_BIT then
+                        ODBC[SQL_TYPE][VARCHAR]
+                    else if dataType = DUCKDB_HUGEINT then
+                        ODBC[SQL_TYPE][BIGINT]
                     else
                         dataType,
                 Transform = Table.TransformColumns(source, {{"DATA_TYPE", FixDataType}})

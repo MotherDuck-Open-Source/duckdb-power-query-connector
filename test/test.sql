@@ -4,9 +4,17 @@ create or replace table test AS (
         (x+2)::TINYINT as y,
         uuid()::VARCHAR as customer_id,
         uuid()::VARCHAR as customer_varchar_field,
-        '2024-02-01'::timestamp + interval 1 minute * (random() * 20000)::int as customer_timestamp,
-        (random() > 0.5)::bool as customer_flag,
-        (random()*10)::integer as customer_integer_field,
-        CAST(1e12 * random() AS FLOAT) as customer_float_field
+        '2024-02-01'::TIMESTAMP + interval 1 minute * (random() * 20000)::int as customer_timestamp,
+        (random() > 0.5)::BOOL as customer_flag,
+        (random()*10)::INTEGER as customer_integer_field,
+        CAST(1e12 * random() AS FLOAT) as customer_float_field,
+        CAST(1e12 * random() AS DOUBLE) as customer_double_field,
+        (random()*10)::BIGINT as customer_bigint_field,
+        10101::BIT as customer_bit_field,
+        '\xAA\xAB\xAC'::BLOB as customer_blob_field,
+        '2024-03-14'::DATE as customer_date_field,
+        (x * 3.141592653589793238462643)::DECIMAL(27, 24) as customer_decimal_field,
+        (x * 10e10)::HUGEINT as customer_hugeint_field,
+        -- x * (INTERVAL 5 HOUR) as customer_interval_field
     from generate_series(1, 10) g(x)
 );
