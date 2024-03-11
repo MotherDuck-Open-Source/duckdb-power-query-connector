@@ -444,6 +444,7 @@
         TYPE_DATE = 91,
         TYPE_TIME = 92,
         TYPE_TIMESTAMP = 93,
+        TYPE_TIMESTAMP_WITH_TIMEZONE = 95,
         // SQL Server Types -150 to -159 (sqlncli.h)
         SS_VARIANT = -150,
         SS_UDT = -151,
