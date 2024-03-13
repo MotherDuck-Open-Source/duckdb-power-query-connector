@@ -112,17 +112,23 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                 DUCKDB_INTEGER = 13, // int32
                 DUCKDB_BIGINT = 14, // bigint
                 DUCKDB_DATE = 15, // date
-                DUCKDB_TIME = 16, // time
+                DUCKDB_TIME = 16, // time, not supported
                 DUCKDB_TIMESTAMP = 19, // timestamp
                 DUCKDB_DECIMAL = 21, // decimal
-                DUCKDB_FLOAT = 22, // float
+                DUCKDB_REAL = 22, // float or real
                 DUCKDB_DOUBLE = 23, //double
                 DUCKDB_VARCHAR = 25, // varchar
                 DUCKDB_BLOB = 26, // blob
-                DUCKDB_INTERVAL = 27, // interval
-                DUCKDB_TIMESTAMPTZ = 32, // timestamptz
+                DUCKDB_INTERVAL = 27, // interval, not supported
+                DUCKDB_UTINYINT = 28, // utinyint, not supported in power bi
+                DUCKDB_USMALLINT = 29, // usmallint, not supported in power bi
+                DUCKDB_UINTEGER = 30, // uinteger, not supported in power bi
+                DUCKDB_UBIGINT = 31, // ubigint, not supported in power bi
+                DUCKDB_TIMESTAMPTZ = 32, // timestamptz, not supported
                 DUCKDB_BIT = 36, // bit
+                DUCKDB_UHUGEINT = 49, // uhugeint, not supported in power bi
                 DUCKDB_HUGEINT = 50, // hugeint
+                DUCKDB_UUID = 54, // uuid, not supported in power bi
                 FixDataType = (dataType) =>
                     // For debugging purposes, to find out what data types are passed,
                     // uncomment next line and comment rest of code block
@@ -133,34 +139,46 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                         ODBC[SQL_TYPE][TINYINT]
                     else if dataType = DUCKDB_SMALLINT then
                         ODBC[SQL_TYPE][SMALLINT]
+                    else if dataType = DUCKDB_INTEGER then
+                        ODBC[SQL_TYPE][INTEGER]
                     else if dataType = DUCKDB_BIGINT then
                         ODBC[SQL_TYPE][BIGINT]
-                    else if dataType = DUCKDB_INTEGER then
-                        ODBC[SQL_TYPE][BIGINT]
-                    else if dataType = DUCKDB_DECIMAL then
-                        ODBC[SQL_TYPE][DECIMAL]
-                    else if dataType = DUCKDB_FLOAT then
-                        ODBC[SQL_TYPE][FLOAT]
-                    else if dataType = DUCKDB_DOUBLE then
-                        ODBC[SQL_TYPE][DOUBLE]
                     else if dataType = DUCKDB_DATE then
                         ODBC[SQL_TYPE][TYPE_DATE]
                     else if dataType = DUCKDB_TIME then
                         ODBC[SQL_TYPE][TIME]
                     else if dataType = DUCKDB_TIMESTAMP then
                         ODBC[SQL_TYPE][TIMESTAMP]
+                    else if dataType = DUCKDB_DECIMAL then
+                        ODBC[SQL_TYPE][DECIMAL]
+                    else if dataType = DUCKDB_REAL then
+                        ODBC[SQL_TYPE][FLOAT]
+                    else if dataType = DUCKDB_DOUBLE then
+                        ODBC[SQL_TYPE][DOUBLE]
                     else if dataType = DUCKDB_VARCHAR then
                         ODBC[SQL_TYPE][VARCHAR]
                     else if dataType = DUCKDB_BLOB then
                         ODBC[SQL_TYPE][BINARY]
                     else if dataType = DUCKDB_INTERVAL then
                         ODBC[SQL_TYPE][INTERVAL]
+                    else if dataType = DUCKDB_UTINYINT then
+                        ODBC[SQL_C][UTINYINT]
+                    else if dataType = DUCKDB_USMALLINT then
+                        ODBC[SQL_C][UBIGINT]
+                    else if dataType = DUCKDB_UINTEGER then
+                        ODBC[SQL_C][UBIGINT]
+                    else if dataType = DUCKDB_UBIGINT then
+                        ODBC[SQL_C][UBIGINT]
                     else if dataType = DUCKDB_TIMESTAMPTZ then
                         ODBC[SQL_TYPE][TIMESTAMP]
                     else if dataType = DUCKDB_BIT then
                         ODBC[SQL_TYPE][VARCHAR]
+                    else if dataType = DUCKDB_UHUGEINT then
+                        ODBC[SQL_C][UBIGINT]
                     else if dataType = DUCKDB_HUGEINT then
                         ODBC[SQL_TYPE][BIGINT]
+                    else if dataType = DUCKDB_UUID then
+                        ODBC[SQL_TYPE][VARCHAR]
                     else
                         dataType,
                 Transform = Table.TransformColumns(source, {{"DATA_TYPE", FixDataType}})
