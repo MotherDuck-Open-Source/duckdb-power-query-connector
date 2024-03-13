@@ -1,4 +1,4 @@
-# DuckDB Power Query Connector by MotherDuck (Beta)
+# DuckDB Power Query Connector by MotherDuck
 
 This is the Power Query Custom Connector for DuckDB. Use this to connect to a DuckDB database in memory, from a local file or on MotherDuck with Power BI and Excel.
 
@@ -24,5 +24,5 @@ This is the Power Query Custom Connector for DuckDB. Use this to connect to a Du
 ![Connect dialog](images/connect.png)
 1. Select the table(s) you want to import. Click "Load".
 ![Navigator dialog to preview and select your table(s)](images/navigator.png)
-1. You can now query your data and create dashboards!
+1. You can now query your data and create visualizations!
 ![Power BI example usage](images/power-bi-example.png)
