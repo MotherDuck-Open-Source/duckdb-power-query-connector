@@ -239,7 +239,8 @@ DuckDB = [
             {"SqlODBC.Contents", server},
     // Set supported types of authentication
     Authentication = [
-        Windows = []
+        Windows = [],
+        Anonymous = []
     ],
     Label = Extension.LoadString("DataSourceLabel")
 ];
