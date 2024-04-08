@@ -48,9 +48,9 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
         else if (read_only = false)
         then
             "read_write"
-        else if (Record.HasFields(options, "read_only") = true)
+        else if (Record.HasFields(options, "access_mode") = true)
         then
-            options[read_only]
+            options[access_mode]
         else
             "automatic",
         // Custom user agent
