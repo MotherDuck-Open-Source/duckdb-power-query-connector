@@ -1,10 +1,14 @@
 // Use this file to write queries to test your data connector
 let
-    options = [read_only=1, custom_user_agent="vscode"],
+    options = [custom_user_agent="vscode"],
     Database = "~\source\repos\DuckDBPowerQueryConnector\test\test.db",
-    OdbcDatasource = DuckDB.Contents(Database, "", options)
+    // Uncomment line below to connect to MotherDuck
     // Database = "md:",
-    // MotherDuckToken = "",
-    // OdbcDatasource = DuckDB.Contents(Database, MotherDuckToken, options)
+    // To get your MotherDuck token, go to https://app.motherduck.com/token-request?appName=PowerQuerySDK
+    MotherDuckToken = "",
+    // ReadOnly mode (true or false)
+    ReadOnly=true,
+    // Connect to data source
+    OdbcDatasource = DuckDB.Contents(Database, MotherDuckToken, ReadOnly, options)
 in
     OdbcDatasource{[Item="test"]}[Data]
