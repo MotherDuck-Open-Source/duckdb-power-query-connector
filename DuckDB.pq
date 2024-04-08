@@ -42,17 +42,17 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
     let
         Config_DriverName = Config_DriverName,
         // Read-only
-        ReadOnly = if (read_only = true)
+        AccessMode = if (read_only = true)
         then
-            1
+            "read_only"
         else if (read_only = false)
         then
-            0
-        else if (Record.HasFields(options, "read_only") = true)
+            "read_write"
+        else if (Record.HasFields(options, "access_mode") = true)
         then
-            options[read_only]
+            options[access_mode]
         else
-            0,
+            "automatic",
         // Custom user agent
         CustomUserAgent = if (Record.HasFields(options, "custom_user_agent") = true)
         then
@@ -63,7 +63,7 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
         ConnectionString = options & [
             Driver = Config_DriverName,
             Database = GetFullPath(database, motherduck_token),
-            read_only = ReadOnly,
+            access_mode = AccessMode,
             custom_user_agent = CustomUserAgent
         ],
         //

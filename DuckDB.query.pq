@@ -1,7 +1,7 @@
 // Use this file to write queries to test your data connector
 let
     options = [custom_user_agent="vscode"],
-    Database = "~\source\repos\duckdb-power-query-connector\test\test.db",
+    Database = "~\test.db",
     // Uncomment line below to connect to MotherDuck
     // Database = "md:",
     // To get your MotherDuck token, go to https://app.motherduck.com/token-request?appName=PowerQuerySDK
