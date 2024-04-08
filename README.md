@@ -18,8 +18,9 @@ This is the Power Query Custom Connector for DuckDB. Use this to connect to a Du
 1. Click on Get Data -> More...
 1. Search for `DuckDB` and click "Connect"
 ![Find DuckDB connector](images/find-connector.png)
-1. Enter your database location. This can be a local file path (e.g. `~\my_database.db`) or a MotherDuck database location (e.g. `md:my_database`). (Optional) enter your [MotherDuck token](https://motherduck.com/docs/authenticating-to-motherduck/#authentication-using-a-service-token).
-![Connect to your DuckDB database](images/connect-duckdb.png). Click "OK".
+1. Enter your database location. This can be a local file path (e.g. `~\my_database.db`) or a MotherDuck database location (e.g. `md:my_database`). (Optional) enter your [MotherDuck token](https://app.motherduck.com/token-request?appName=PowerBI). If you want to access the database in `read_only` mode, you can set it to `true`.
+![Connect to your DuckDB database](images/connect-duckdb.png)
+Click "OK".
 1. Click "Connect".
 ![Connect dialog](images/connect.png)
 1. Select the table(s) you want to import. Click "Load".

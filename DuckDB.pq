@@ -34,15 +34,37 @@ Config_UseCastInsteadOfConvert = null;
 // Set this to true to enable Direct Query in addition to Import mode.
 Config_EnableDirectQuery = true;
 
+// Default custom user agent
+DefaultCustomUserAgent = "powerbi/v0.0(DuckDB)";
+
 [DataSource.Kind="DuckDB", Publish="DuckDB.Publish"]
-shared DuckDB.Contents = (database as text, optional motherduck_token as text, optional options as record) =>
+shared DuckDB.Contents = (database as text, optional motherduck_token as text, optional read_only as logical, optional options as record) =>
     let
         Config_DriverName = Config_DriverName,
+        // Read-only
+        ReadOnly = if (read_only = true)
+        then
+            1
+        else if (read_only = false)
+        then
+            0
+        else if (Record.HasFields(options, "read_only") = true)
+        then
+            options[read_only]
+        else
+            0,
+        // Custom user agent
+        CustomUserAgent = if (Record.HasFields(options, "custom_user_agent") = true)
+        then
+            Text.Combine({DefaultCustomUserAgent, options[custom_user_agent]}, " ")
+        else
+            DefaultCustomUserAgent,
         // The ODBC connection string
-        ConnectionString = [
+        ConnectionString = options & [
             Driver = Config_DriverName,
             Database = GetFullPath(database, motherduck_token),
-            custom_user_agent = "powerbi/v0.0(DuckDB)"
+            read_only = ReadOnly,
+            custom_user_agent = CustomUserAgent
         ],
         //
         // Configuration options for the call to Odbc.DataSource
