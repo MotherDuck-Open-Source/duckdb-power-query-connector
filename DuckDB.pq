@@ -182,7 +182,7 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                     else if dataType = DUCKDB_BLOB then
                         ODBC[SQL_TYPE][BINARY]
                     else if dataType = DUCKDB_INTERVAL then
-                        ODBC[SQL_TYPE][INTERVAL]
+                        ODBC[SQL_TYPE][VARCHAR]
                     else if dataType = DUCKDB_UTINYINT then
                         ODBC[SQL_C][UTINYINT]
                     else if dataType = DUCKDB_USMALLINT then
