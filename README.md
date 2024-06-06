@@ -2,15 +2,15 @@
 
 This is the Power Query Custom Connector for DuckDB. Use this to connect to a DuckDB database in memory, from a local file or on MotherDuck with Power BI and Excel.
 
-## Installing (Beta version)
+## Installing
 
-1. Install the [DuckDB v0.10.0](https://github.com/duckdb/duckdb/releases/tag/v0.10.0) ODBC driver for your platform:
-      - [duckdb_odbc-windows-amd64.zip](https://github.com/duckdb/duckdb/releases/download/v0.10.0/duckdb_odbc-windows-amd64.zip)
+1. Install the latest [DuckDB ODBC driver](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases) for your platform:
+      - [duckdb_odbc-windows-amd64.zip](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases/download/v0.1.3/odbc-windows-amd64.zip)
 1. Check that the correct version was installed. To do this, open the Registry Editor by running `regedit` in the command prompt or `Run` dialog. Browse to the `HKEY_LOCAL_MACHINE\SOFTWARE\ODBC\ODBCINST.INI\DuckDB Driver` entry and check that the Driver field contains the version you installed. If not, delete the `DuckDB Driver` registry key and rerun the installer.
 1. Create this folder if it does not yet exist: `[Documents]\Power BI Desktop\Custom Connectors`. Note that if this location does not work, you may need to place this in your OneDrive Documents folder.
 1. Open Power BI, go to File -> Options and settings -> Options -> Security -> Data Extensions. Enable "Allow any extensions to load without validation or warning".
 ![Dialog window showing Power BI Options -> Security -> Data Extensions](images/power_bi_options.png)
-1. Download and copy the latest `.mez` file from [GitHub Releases](https://github.com/MotherDuck-Open-Source/DuckDBPowerQueryConnector/releases) into this folder.
+1. Download and copy the latest `.mez` file from [GitHub Releases](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases) into this folder.
 
 
 ## How to use with Power BI
