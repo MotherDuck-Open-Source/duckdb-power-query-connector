@@ -4,14 +4,20 @@ This is the Power Query Custom Connector for DuckDB. Use this to connect to a Du
 
 ## Installing
 
-1. Install the latest DuckDB ODBC driver and Power Query Connector `duckdb-power-query-connector.mez` file from the [GitHub Releases](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases) for your platform:
-      - [duckdb_odbc-windows-amd64.zip](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases/download/v0.1.3/odbc-windows-amd64.zip)
-      - [duckdb-power-query-connector.mez](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases/download/v0.1.3/duckdb-power-query-connector.mez)
+1. Download the latest DuckDB ODBC driver from the [DuckDB Power Query Connector GitHub Releases](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases) for Windows:
+      - [duckdb_odbc-windows-amd64.zip](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases/latest/download/duckdb_odbc-windows-amd64.zip)
+1. Extract the `.zip` archive into a permanent location, such as `C:\Program Files\duckdb_odbc`, and install the latest DuckDB driver by running `odbc_install.exe`.
 1. Check that the correct version was installed. To do this, open the Registry Editor by running `regedit` in the command prompt or `Run` dialog. Browse to the `HKEY_LOCAL_MACHINE\SOFTWARE\ODBC\ODBCINST.INI\DuckDB Driver` entry and check that the Driver field contains the version you installed. If not, delete the `DuckDB Driver` registry key and rerun the installer.
-1. Create this folder if it does not yet exist: `[Documents]\Power BI Desktop\Custom Connectors`. Note that if this location does not work, you may need to place this in your OneDrive Documents folder.
+
 1. Open Power BI, go to File -> Options and settings -> Options -> Security -> Data Extensions. Enable "Allow any extensions to load without validation or warning".
 ![Dialog window showing Power BI Options -> Security -> Data Extensions](images/power_bi_options.png)
-1. Move or copy the `duckdb-power-query-connector.mez` file you downloaded in Step (1) into `[Documents]\Power BI Desktop\Custom Connectors`.
+
+1. Download the latest version of the DuckDB Power Query extension:
+      - [duckdb-power-query-connector.mez](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases/latest/download/duckdb-power-query-connector.mez)
+
+1. Create this folder if it does not yet exist: `[Documents]\Power BI Desktop\Custom Connectors`.
+
+1. Move or copy the `duckdb-power-query-connector.mez` file into `[Documents]\Power BI Desktop\Custom Connectors`. Note that if this location does not work, you may need to place this in your OneDrive Documents folder.
 
 
 ## How to use with Power BI
