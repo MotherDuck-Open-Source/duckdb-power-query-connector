@@ -2,6 +2,10 @@
 
 This is the Power Query Custom Connector for DuckDB. Use this to connect to a DuckDB database in memory, from a local file or on MotherDuck with Power BI and Excel.
 
+1. [Installing](#installing)
+2. [How to use with Power BI](#how-to-use-with-power-bi)
+3. [Turning on UTF-8 support in the Language & Region settings](#turning-on-utf-8-support-in-the-language--region-settings)
+
 ## Installing
 
 1. Download the latest DuckDB ODBC driver from the [DuckDB Power Query Connector GitHub Releases](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/releases) for Windows:
@@ -34,3 +38,23 @@ Click "OK".
 ![Navigator dialog to preview and select your table(s)](images/navigator.png)
 1. You can now query your data and create visualizations!
 ![Power BI example usage](images/power-bi-example.png)
+
+
+## Turning on UTF-8 support in the Language & Region settings
+
+UTF-8 is currently not supported in the DuckDB ODBC driver. As a workaround, you can turn on UTF-8 decoding in Windows. Note that this may change behavior for other applications, so please use with caution.
+
+1. Open start menu and type "Language settings". Open the "Language & region" settings
+2. Click on "Administrative language settings"
+3. Click on "Change system locale"
+4. Check the "Beta: Use Unicode UTF-8 for worldwide language support" and click OK
+
+![Screenshot 2024-05-03 165950](https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/assets/4041805/3251d212-0cde-44be-b3a5-68a0d3d434cf)
+
+5. This prompts Windows to restart.
+6. Next, open Power BI, click on "Options and settings" -> "Options" -> "Data Load" and click the "Clear cache" button.
+
+Now, you should be able to load your UTF-8 encoded database with Power BI directly:
+
+<img width="653" alt="image" src="https://github.com/MotherDuck-Open-Source/duckdb-power-query-connector/assets/4041805/bc83d199-317b-4142-a180-579a9b9d8a05">
+
