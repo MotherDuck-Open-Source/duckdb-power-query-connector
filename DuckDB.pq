@@ -38,7 +38,7 @@ Config_EnableDirectQuery = true;
 DefaultCustomUserAgent = "powerbi/v0.0(DuckDB)";
 
 [DataSource.Kind="DuckDB", Publish="DuckDB.Publish"]
-shared DuckDB.Contents = (database as text, optional motherduck_token as text, optional read_only as logical, optional options as record) =>
+shared DuckDB.Contents = (database as text, optional motherduck_token as text, optional read_only as logical, optional saas_mode as logical, optional options as record) =>
     let
         Config_DriverName = Config_DriverName,
         // Read-only
@@ -62,7 +62,7 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
         // The ODBC connection string
         ConnectionString = options & [
             Driver = Config_DriverName,
-            Database = GetFullPath(database, motherduck_token),
+            Database = GetFullPath(database, motherduck_token, saas_mode),
             access_mode = AccessMode,
             custom_user_agent = CustomUserAgent
         ],
@@ -284,9 +284,11 @@ DuckDB.Icons = [
 ];
 
 // Get the full DuckDB path to pass to the ODBC driver
-GetFullPath = (database as text, optional motherduck_token as text) as text =>
+GetFullPath = (database as text, optional motherduck_token as text, optional saas_mode as logical) as text =>
     let
-        path = if IsMotherDuckDatabase(database)
+        path = if IsMotherDuckDatabase(database) and saas_mode = true
+            then database & "?motherduck_token=" & motherduck_token & "&saas_mode=true"
+            else if IsMotherDuckDatabase(database)
             then database & "?motherduck_token=" & motherduck_token
             else database
     in

@@ -8,7 +8,9 @@ let
     MotherDuckToken = "",
     // ReadOnly mode (true or false)
     ReadOnly=true,
+    // (Optional for MD) SaaS mode (true or false)
+    SaaSMode=false,
     // Connect to data source
-    OdbcDatasource = DuckDB.Contents(Database, MotherDuckToken, ReadOnly, options)
+    OdbcDatasource = DuckDB.Contents(Database, MotherDuckToken, ReadOnly, SaaSMode, options)
 in
     OdbcDatasource{[Item="test"]}[Data]
