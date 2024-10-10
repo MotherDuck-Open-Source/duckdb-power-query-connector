@@ -117,110 +117,6 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                     toTable = Table.FromRecords(rows)
                 in
                     Value.ReplaceType(toTable, Value.Type(types)),
-        // SQLColumns is a function handler that receives the results of an ODBC call
-        // to SQLColumns(). The source parameter contains a table with the data type
-        // information. This override is typically used to fix up data type mismatches
-        // between calls to SQLGetTypeInfo and SQLColumns.
-        //
-        // For details of the format of the source table parameter, please see:
-        // https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlcolumns-function
-        //
-        SQLColumns = (catalogName, schemaName, tableName, columnName, source) =>
-            let
-                // Types defined in duckdb/tools/odbc/include/api_info.hpp#L74
-                DUCKDB_BOOL = 10, // bool
-                DUCKDB_TINYINT = 11, // int8
-                DUCKDB_SMALLINT = 12, // int16
-                DUCKDB_INTEGER = 13, // int32
-                DUCKDB_BIGINT = 14, // bigint
-                DUCKDB_DATE = 15, // date
-                DUCKDB_TIME = 16, // time, not supported
-                DUCKDB_TIMESTAMP = 19, // timestamp
-                DUCKDB_DECIMAL = 21, // decimal
-                DUCKDB_REAL = 22, // float or real
-                DUCKDB_DOUBLE = 23, //double
-                DUCKDB_VARCHAR = 25, // varchar
-                DUCKDB_BLOB = 26, // blob
-                DUCKDB_INTERVAL = 27, // interval, not supported
-                DUCKDB_UTINYINT = 28, // utinyint, not supported in power bi
-                DUCKDB_USMALLINT = 29, // usmallint, not supported in power bi
-                DUCKDB_UINTEGER = 30, // uinteger, not supported in power bi
-                DUCKDB_UBIGINT = 31, // ubigint, not supported in power bi
-                DUCKDB_TIMESTAMPTZ = 32, // timestamptz, not supported
-                DUCKDB_BIT = 36, // bit
-                DUCKDB_UHUGEINT = 49, // uhugeint, not supported in power bi
-                DUCKDB_HUGEINT = 50, // hugeint
-                DUCKDB_UUID = 54, // uuid, not supported in power bi
-                FixDataType = (dataType) =>
-                    // For debugging purposes, to find out what data types are passed,
-                    // uncomment next line and comment rest of code block
-                    // error Error.Record("Expression.Error", Number.ToText(dataType)),
-                    if dataType = DUCKDB_BOOL then
-                        ODBC[SQL_TYPE][VARCHAR]
-                    else if dataType = DUCKDB_TINYINT then
-                        ODBC[SQL_TYPE][TINYINT]
-                    else if dataType = DUCKDB_SMALLINT then
-                        ODBC[SQL_TYPE][SMALLINT]
-                    else if dataType = DUCKDB_INTEGER then
-                        ODBC[SQL_TYPE][INTEGER]
-                    else if dataType = DUCKDB_BIGINT then
-                        ODBC[SQL_TYPE][BIGINT]
-                    else if dataType = DUCKDB_DATE then
-                        ODBC[SQL_TYPE][TYPE_DATE]
-                    else if dataType = DUCKDB_TIME then
-                        ODBC[SQL_TYPE][TIME]
-                    else if dataType = DUCKDB_TIMESTAMP then
-                        ODBC[SQL_TYPE][TIMESTAMP]
-                    else if dataType = DUCKDB_DECIMAL then
-                        ODBC[SQL_TYPE][DECIMAL]
-                    else if dataType = DUCKDB_REAL then
-                        ODBC[SQL_TYPE][FLOAT]
-                    else if dataType = DUCKDB_DOUBLE then
-                        ODBC[SQL_TYPE][DOUBLE]
-                    else if dataType = DUCKDB_VARCHAR then
-                        ODBC[SQL_TYPE][VARCHAR]
-                    else if dataType = DUCKDB_BLOB then
-                        ODBC[SQL_TYPE][BINARY]
-                    else if dataType = DUCKDB_INTERVAL then
-                        ODBC[SQL_TYPE][VARCHAR]
-                    else if dataType = DUCKDB_UTINYINT then
-                        ODBC[SQL_C][UTINYINT]
-                    else if dataType = DUCKDB_USMALLINT then
-                        ODBC[SQL_C][UBIGINT]
-                    else if dataType = DUCKDB_UINTEGER then
-                        ODBC[SQL_C][UBIGINT]
-                    else if dataType = DUCKDB_UBIGINT then
-                        ODBC[SQL_C][UBIGINT]
-                    else if dataType = DUCKDB_TIMESTAMPTZ then
-                        ODBC[SQL_TYPE][TIMESTAMP]
-                    else if dataType = DUCKDB_BIT then
-                        ODBC[SQL_TYPE][VARCHAR]
-                    else if dataType = DUCKDB_UHUGEINT then
-                        ODBC[SQL_C][UBIGINT]
-                    else if dataType = DUCKDB_HUGEINT then
-                        ODBC[SQL_TYPE][BIGINT]
-                    else if dataType = DUCKDB_UUID then
-                        ODBC[SQL_TYPE][VARCHAR]
-                    else
-                        dataType,
-                Transform = Table.TransformColumns(source, {{"DATA_TYPE", FixDataType}})
-           in
-                if (EnableTraceOutput <> true) then
-                    Transform
-                else if (
-                    // the if statement conditions will force the values to evaluated/written to diagnostics
-                    Diagnostics.LogValue("SQLColumns.TableName", tableName) <> "***"
-                    and Diagnostics.LogValue("SQLColumns.ColumnName", columnName) <> "***"
-                ) then
-                    let
-                        // Outputting the entire table might be too large, and result in the value being truncated.
-                        // We can output a row at a time instead with Table.TransformRows()
-                        rows = Table.TransformRows(Transform, each Diagnostics.LogValue("SQLColumns", _)),
-                        toTable = Table.FromRecords(rows)
-                    in
-                        Value.ReplaceType(toTable, Value.Type(Transform))
-                else
-                    Transform,
         Options = [
                 // A logical (true/false) that sets whether to view the tables grouped by their schema names
                 HierarchicalNavigation = false,
@@ -232,7 +128,6 @@ shared DuckDB.Contents = (database as text, optional motherduck_token as text, o
                 ClientConnectionPooling = false,
                 // Other configuration options
                 SqlCapabilities = SqlCapabilities,
-                SQLColumns = SQLColumns,
                 SQLGetInfo = SQLGetInfo,
                 SQLGetTypeInfo = SQLGetTypeInfo
             ],
